@@ -1,7 +1,7 @@
 
 # Module to deploy basic networking 
-module "vpc-nonprod" {
-  source = "/home/ec2-user/environment/Group5-ACS730-Project/modules/Network-Prod"
+module "vpc-prod" {
+  source             = "/home/ec2-user/environment/Group5-ACS730-Project/modules/Network-Prod"
   env                = var.env
   vpc_cidr           = var.vpc_cidr
   public_cidr_blocks = var.public_cidr_blocks

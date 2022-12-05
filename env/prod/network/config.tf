@@ -1,7 +1,7 @@
 terraform {
   backend "s3" {
-    bucket = "prog-acs730-project-group5"  // Bucket where to SAVE Terraform State
+    bucket = "prod-acs730-project-group5"     // Bucket where to SAVE Terraform State
     key    = "prod-network/terraform.tfstate" // Object name in the bucket to SAVE Terraform State
-    region = "us-east-1"                         // Region where bucket is created
+    region = "us-east-1"                      // Region where bucket is created
   }
 }

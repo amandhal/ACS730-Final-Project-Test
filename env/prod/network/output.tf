@@ -1,20 +1,19 @@
-# Add output variables
 output "public_subnet_ids" {
-  value = aws_subnet.public_subnet[*].id
+  value = module.vpc-prod.public_subnet_ids
 }
 
 output "private_subnet_ids" {
-  value = aws_subnet.private_subnet[*].id
+  value = module.vpc-prod.private_subnet_ids
 }
 
 output "vpc_id" {
-  value = aws_vpc.main.id
+  value = module.vpc-prod.vpc_id
 }
 
 output "public_route_table_id" {
-  value = aws_route_table.public_route_table.id
+  value = module.vpc-prod.public_route_table_id
 }
 
 output "private_route_table_id" {
-  value = aws_route_table.private_route_table.id
+  value = module.vpc-prod.private_route_table_id
 }
