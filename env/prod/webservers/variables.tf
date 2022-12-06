@@ -10,13 +10,13 @@ variable "instance_type" {
 
 # Variable to signal the current environment 
 variable "env" {
-  default     = "nonprod"
+  default     = "prod"
   type        = string
   description = "Deployment Environment"
 }
 
 variable "availability_zones" {
-  default = ["us-east-1b", "us-east-1c"]
+  default = ["us-east-1b", "us-east-1c", "us-east-1d"]
   type    = list(string)
 }
 
