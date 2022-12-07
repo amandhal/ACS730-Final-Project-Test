@@ -192,12 +192,12 @@ resource "aws_lb_listener" "listener" {
 
 resource "aws_launch_configuration" "web" {
   name_prefix                 = "web-"
+  iam_instance_profile = "LabInstanceProfile"
   image_id                    = "ami-087c17d1fe0178315"
   instance_type               = "t2.micro"
   key_name                    = "id_rsa"
   security_groups             = [aws_security_group.web_sg.id]
-  associate_public_ip_address = true
-  user_data                   = file("install_httpd.sh.tpl")
+  user_data                   = filebase64("install_httpd.sh")
   lifecycle {
     create_before_destroy = true
   }
@@ -247,7 +247,7 @@ resource "aws_cloudwatch_metric_alarm" "web_cpu_alarm_up" {
   namespace           = "AWS/EC2"
   period              = "30"
   statistic           = "Average"
-  threshold           = "5"
+  threshold           = "10"
   dimensions = {
     AutoScalingGroupName = "${aws_autoscaling_group.web.name}"
   }
@@ -276,3 +276,31 @@ resource "aws_cloudwatch_metric_alarm" "web_cpu_alarm_down" {
   alarm_description = "This metric monitor EC2 instance CPU utilization"
   alarm_actions     = ["${aws_autoscaling_policy.web_policy_down.arn}"]
 }
+
+/*resource "aws_iam_role" "ec2_role" {
+  name = "ec2_role"
+
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
+  assume_role_policy = jsonencode({
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "sts:AssumeRole"
+            ],
+            "Principal": {
+                "Service": [
+                    "ec2.amazonaws.com"
+                ]
+            }
+        }
+    ]
+})
+  managed_policy_arns = ["arn:aws:iam::aws:policy/AmazonS3FullAccess"]
+}
+
+resource "aws_iam_instance_profile" "iam_profile" {
+  role = aws_iam_role.ec2_role.name
+}*/
