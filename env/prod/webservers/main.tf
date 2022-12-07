@@ -166,6 +166,15 @@ resource "aws_lb_target_group" "targetGroup" {
   port     = 80
   protocol = "HTTP"
   vpc_id   = data.terraform_remote_state.network.outputs.vpc_id
+
+  lifecycle { create_before_destroy = true }
+
+  health_check {
+    healthy_threshold   = 2
+    unhealthy_threshold = 6
+    timeout             = 30
+    interval            = 31
+  }
 }
 
 resource "aws_lb_listener" "listener" {
@@ -178,7 +187,7 @@ resource "aws_lb_listener" "listener" {
     target_group_arn = aws_lb_target_group.targetGroup.arn
   }
 
-  
+
 }
 
 resource "aws_launch_configuration" "web" {
@@ -195,13 +204,13 @@ resource "aws_launch_configuration" "web" {
 }
 
 resource "aws_autoscaling_group" "web" {
-  name             = "${aws_launch_configuration.web.name}-asg"
-  min_size         = 3
-  desired_capacity = 3
-  max_size         = 4
+  name              = "${aws_launch_configuration.web.name}-asg"
+  min_size          = 3
+  desired_capacity  = 3
+  max_size          = 4
   target_group_arns = [aws_lb_target_group.targetGroup.arn]
   health_check_type = "ELB"
-  
+
   launch_configuration = aws_launch_configuration.web.name
   enabled_metrics = [
     "GroupMinSize",
@@ -211,7 +220,7 @@ resource "aws_autoscaling_group" "web" {
     "GroupTotalInstances"
   ]
   metrics_granularity = "1Minute"
-  vpc_zone_identifier =  data.terraform_remote_state.network.outputs.public_subnet_ids[*]
+  vpc_zone_identifier = data.terraform_remote_state.network.outputs.private_subnet_ids[*]
   # Required to redeploy without an outage.
   lifecycle {
     create_before_destroy = true
@@ -224,46 +233,46 @@ resource "aws_autoscaling_group" "web" {
 }
 
 resource "aws_autoscaling_policy" "web_policy_up" {
-  name = "web_policy_up"
-  scaling_adjustment = 1
-  adjustment_type = "ChangeInCapacity"
-  cooldown = 60
-  autoscaling_group_name = "${aws_autoscaling_group.web.name}"
+  name                   = "web_policy_up"
+  scaling_adjustment     = 1
+  adjustment_type        = "ChangeInCapacity"
+  cooldown               = 60
+  autoscaling_group_name = aws_autoscaling_group.web.name
 }
 resource "aws_cloudwatch_metric_alarm" "web_cpu_alarm_up" {
-  alarm_name = "web_cpu_alarm_up"
+  alarm_name          = "web_cpu_alarm_up"
   comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods = "2"
-  metric_name = "CPUUtilization"
-  namespace = "AWS/EC2"
-  period = "30"
-  statistic = "Average"
-  threshold = "5"
-dimensions = {
+  evaluation_periods  = "2"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = "30"
+  statistic           = "Average"
+  threshold           = "5"
+  dimensions = {
     AutoScalingGroupName = "${aws_autoscaling_group.web.name}"
   }
-alarm_description = "This metric monitor EC2 instance CPU utilization"
-  alarm_actions = [ "${aws_autoscaling_policy.web_policy_up.arn}" ]
+  alarm_description = "This metric monitor EC2 instance CPU utilization"
+  alarm_actions     = ["${aws_autoscaling_policy.web_policy_up.arn}"]
 }
 resource "aws_autoscaling_policy" "web_policy_down" {
-  name = "web_policy_down"
-  scaling_adjustment = -1
-  adjustment_type = "ChangeInCapacity"
-  cooldown = 60
-  autoscaling_group_name = "${aws_autoscaling_group.web.name}"
+  name                   = "web_policy_down"
+  scaling_adjustment     = -1
+  adjustment_type        = "ChangeInCapacity"
+  cooldown               = 60
+  autoscaling_group_name = aws_autoscaling_group.web.name
 }
 resource "aws_cloudwatch_metric_alarm" "web_cpu_alarm_down" {
-  alarm_name = "web_cpu_alarm_down"
+  alarm_name          = "web_cpu_alarm_down"
   comparison_operator = "LessThanOrEqualToThreshold"
-  evaluation_periods = "2"
-  metric_name = "CPUUtilization"
-  namespace = "AWS/EC2"
-  period = "30"
-  statistic = "Average"
-  threshold = "5"
-dimensions = {
+  evaluation_periods  = "2"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = "30"
+  statistic           = "Average"
+  threshold           = "5"
+  dimensions = {
     AutoScalingGroupName = "${aws_autoscaling_group.web.name}"
   }
-alarm_description = "This metric monitor EC2 instance CPU utilization"
-  alarm_actions = [ "${aws_autoscaling_policy.web_policy_down.arn}" ]
+  alarm_description = "This metric monitor EC2 instance CPU utilization"
+  alarm_actions     = ["${aws_autoscaling_policy.web_policy_down.arn}"]
 }
